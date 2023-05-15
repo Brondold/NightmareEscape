@@ -3,7 +3,11 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - mur1
+  - mur2
+  - sol
+  - plafond
   layers:
   - Default
   - TransparentFX
