@@ -18,8 +18,8 @@ TagManager:
   - whatIsWall
   - whatIsGround
   - whatIsLedge
-  - 
-  - 
+  - Player
+  - Ledge
   - 
   - 
   - 
