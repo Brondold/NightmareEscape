@@ -371,7 +371,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEngine.Vector3, UnityEngine.CoreModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"x":-0.08557713776826859,"y":-0.14490267634391786,"z":-1.1720542907714844}'
+      m_SerializableObject: '{"x":-0.06092968210577965,"y":-0.019896134734153749,"z":-1.1758655309677125}'
     min: -Infinity
     max: Infinity
     enumValues: []
@@ -385,7 +385,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEngine.Vector3, UnityEngine.CoreModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"x":86.95136260986328,"y":1.827405571937561,"z":1.7108352184295655}'
+      m_SerializableObject: '{"x":88.64390563964844,"y":1.8340959548950196,"z":359.1253356933594}'
     min: -Infinity
     max: Infinity
     enumValues: []
@@ -483,7 +483,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEngine.Color, UnityEngine.CoreModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"r":85.44501495361328,"g":0.0,"b":0.0,"a":0.0}'
+      m_SerializableObject: '{"r":766.99609375,"g":0.0,"b":0.0,"a":0.0}'
     min: -Infinity
     max: Infinity
     enumValues: []
@@ -1549,7 +1549,7 @@ MonoBehaviour:
   colorMapping: 0
   uvMode: 0
   useSoftParticle: 0
-  vfxSystemSortPriority: 1
+  vfxSystemSortPriority: 0
   sort: 0
   indirectDraw: 0
   computeCulling: 0
@@ -6902,7 +6902,7 @@ MonoBehaviour:
   colorMapping: 0
   uvMode: 0
   useSoftParticle: 0
-  vfxSystemSortPriority: 0
+  vfxSystemSortPriority: 1
   sort: 0
   indirectDraw: 0
   computeCulling: 0
@@ -8779,7 +8779,7 @@ MonoBehaviour:
       inputSlot: {fileID: 8926484042661614722}
     position: {x: 2285, y: 1326}
     expandedSlots: []
-    expanded: 0
+    expanded: 1
 --- !u!114 &8926484042661614845
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8809,7 +8809,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEditor.VFX.TCone, Unity.VisualEffectGraph.Editor,
           Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"transform":{"position":{"x":-0.08557713776826859,"y":-0.14490267634391786,"z":-1.1720542907714844},"angles":{"x":86.95136260986328,"y":1.827405571937561,"z":1.7108352184295655},"scale":{"x":1.0,"y":1.0,"z":1.0}},"baseRadius":0.009999999776482582,"topRadius":1.0739812850952149,"height":1.0}'
+      m_SerializableObject: '{"transform":{"position":{"x":-0.06092968210577965,"y":-0.019896134734153749,"z":-1.1758655309677125},"angles":{"x":88.64390563964844,"y":1.8340959548950196,"z":359.1253356933594},"scale":{"x":1.0,"y":1.0,"z":1.0}},"baseRadius":0.009999999776482582,"topRadius":1.0739812850952149,"height":1.0}'
     m_Space: 0
   m_Property:
     name: o
@@ -9538,7 +9538,7 @@ MonoBehaviour:
   m_Parent: {fileID: 114350483966674976}
   m_Children: []
   m_UIPosition: {x: 0, y: 0}
-  m_UICollapsed: 1
+  m_UICollapsed: 0
   m_UISuperCollapsed: 0
   m_InputSlots: []
   m_OutputSlots:
@@ -9596,7 +9596,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEngine.Color, UnityEngine.CoreModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"r":85.44501495361328,"g":0.0,"b":0.0,"a":0.0}'
+      m_SerializableObject: '{"r":766.99609375,"g":0.0,"b":0.0,"a":0.0}'
     m_Space: 2147483647
   m_Property:
     name: o
