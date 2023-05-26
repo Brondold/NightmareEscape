@@ -61,14 +61,13 @@ public class PlayerMovement : MonoBehaviour
     Vector3 slideDirection;
     Vector3 slideStartPosition;
     bool isSliding;
+    bool isCrouching;
 
     Rigidbody rb;
 
     [Header("UI")]
     public TextMeshProUGUI speedText; // Référence au composant TextMeshProUGUI pour afficher la vitesse
     public TextMeshProUGUI staminaText; // Référence au composant TextMeshProUGUI pour afficher la stamina
-
-    bool isCrouching;
 
     private void Start()
     {
@@ -81,7 +80,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        // ground check
+        //Ground Check
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround);
 
         MyInput();
@@ -115,7 +114,7 @@ public class PlayerMovement : MonoBehaviour
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
-        // when to jump
+        //Jump
         if (Input.GetKeyDown(jumpKey) && readyToJump && grounded && !isCrouching)
         {
             readyToJump = false;
@@ -124,7 +123,7 @@ public class PlayerMovement : MonoBehaviour
             Invoke(nameof(ResetJump), jumpCooldown);
         }
 
-        // when to slide
+        //Slide
         if (Input.GetKeyDown(slideKey) && Input.GetKey(sprintKey) && grounded && currentStamina >= 20f && !isCrouching)
         {
             StartSlide();
@@ -135,7 +134,7 @@ public class PlayerMovement : MonoBehaviour
             EndSlide();
         }
 
-        // when to crouch
+        //Crouch
         if (Input.GetKey(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
         {
             StartCrouch();
@@ -150,20 +149,22 @@ public class PlayerMovement : MonoBehaviour
     {
         if (restricted) return;
 
-        // calculate movement direction
+        //Calcul Direction Mouvement
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
-        // calculate target speed based on sprinting and crouching
+        //Calcul de la vitesse du personnage lors de la Course
         float targetSpeed = moveSpeed;
+
         if (Input.GetKey(sprintKey) && currentStamina > 0 && !isCrouching)
         {
             targetSpeed *= sprintMultiplier;
             currentStamina -= Time.deltaTime * staminaDepletionRate;
         }
 
-        // smoothly interpolate current speed towards target speed
+        //Transition Vitesse Smooth
         float currentSpeed = Mathf.Lerp(rb.velocity.magnitude, targetSpeed, Time.deltaTime * 15f);
 
+        //Verification Stamina
         if (currentStamina <= 0)
         {
             currentSpeed = moveSpeed;
@@ -179,7 +180,7 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            // apply the movement force
+            //Applique Force Mouvement
             if (grounded)
             {
                 rb.AddForce(moveDirection.normalized * currentSpeed * 10f, ForceMode.Force);
@@ -189,9 +190,11 @@ public class PlayerMovement : MonoBehaviour
                 rb.AddForce(moveDirection.normalized * currentSpeed * 10f * airMultiplier, ForceMode.Force);
             }
         }
+
         // Mettre à jour le texte de la vitesse dans l'UI
         speedText.text = targetSpeed.ToString("F2");
     }
+
 
     private void SpeedControl()
     {
@@ -316,6 +319,7 @@ public class PlayerMovement : MonoBehaviour
         if (isCrouching) return;
 
         isCrouching = true;
+
         rb.velocity = Vector3.zero;
         //transform.localScale = new Vector3(1f, 0.5f, 1f);
 
