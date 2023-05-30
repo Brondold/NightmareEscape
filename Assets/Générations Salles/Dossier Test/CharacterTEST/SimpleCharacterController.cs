@@ -11,10 +11,20 @@ public class SimpleCharacterController : MonoBehaviour
     private CharacterController characterController;
     private Vector3 moveDirection;
     private bool isJumping;
+    public Timer timer;
 
     private void Start()
     {
         characterController = GetComponent<CharacterController>();
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("FIN"))
+        {
+            // Arrêter le timer via le script Timer attaché au joueur
+            timer.StopTimer();
+        }
     }
 
     private void Update()
