@@ -61,14 +61,13 @@ public class PlayerMovement : MonoBehaviour
     Vector3 slideDirection;
     Vector3 slideStartPosition;
     bool isSliding;
+    bool isCrouching;
 
     Rigidbody rb;
 
     [Header("UI")]
     public TextMeshProUGUI speedText; // Référence au composant TextMeshProUGUI pour afficher la vitesse
     public TextMeshProUGUI staminaText; // Référence au composant TextMeshProUGUI pour afficher la stamina
-
-    bool isCrouching;
 
     private void Start()
     {
@@ -81,7 +80,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        // ground check
+        //Ground Check
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround);
 
         MyInput();
@@ -115,7 +114,7 @@ public class PlayerMovement : MonoBehaviour
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
-        // when to jump
+        //Jump
         if (Input.GetKeyDown(jumpKey) && readyToJump && grounded && !isCrouching)
         {
             readyToJump = false;
@@ -124,7 +123,7 @@ public class PlayerMovement : MonoBehaviour
             Invoke(nameof(ResetJump), jumpCooldown);
         }
 
-        // when to slide
+        //Slide
         if (Input.GetKeyDown(slideKey) && Input.GetKey(sprintKey) && grounded && currentStamina >= 20f && !isCrouching)
         {
             StartSlide();
@@ -135,7 +134,7 @@ public class PlayerMovement : MonoBehaviour
             EndSlide();
         }
 
-        // when to crouch
+        //Crouch
         if (Input.GetKey(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
         {
             StartCrouch();
@@ -150,20 +149,22 @@ public class PlayerMovement : MonoBehaviour
     {
         if (restricted) return;
 
-        // calculate movement direction
+        //Calcul Direction Mouvement
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
-        // calculate target speed based on sprinting and crouching
+        //Calcul de la vitesse du personnage lors de la Course
         float targetSpeed = moveSpeed;
+
         if (Input.GetKey(sprintKey) && currentStamina > 0 && !isCrouching)
         {
             targetSpeed *= sprintMultiplier;
             currentStamina -= Time.deltaTime * staminaDepletionRate;
         }
 
-        // smoothly interpolate current speed towards target speed
+        //Transition Vitesse Smooth
         float currentSpeed = Mathf.Lerp(rb.velocity.magnitude, targetSpeed, Time.deltaTime * 15f);
 
+        //Verification Stamina
         if (currentStamina <= 0)
         {
             currentSpeed = moveSpeed;
@@ -179,7 +180,7 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            // apply the movement force
+            //Applique Force Mouvement
             if (grounded)
             {
                 rb.AddForce(moveDirection.normalized * currentSpeed * 10f, ForceMode.Force);
@@ -189,9 +190,11 @@ public class PlayerMovement : MonoBehaviour
                 rb.AddForce(moveDirection.normalized * currentSpeed * 10f * airMultiplier, ForceMode.Force);
             }
         }
+
         // Mettre à jour le texte de la vitesse dans l'UI
         speedText.text = targetSpeed.ToString("F2");
     }
+
 
     private void SpeedControl()
     {
@@ -239,6 +242,14 @@ public class PlayerMovement : MonoBehaviour
         slideStartPosition = transform.position;
         rb.useGravity = false;
         rb.velocity = Vector3.zero;
+
+        // Adjust the position to align with the ground
+        RaycastHit groundHit;
+        if (Physics.Raycast(transform.position, Vector3.down, out groundHit, Mathf.Infinity, whatIsGround))
+        {
+            transform.position = groundHit.point + Vector3.up * slideHeight;
+        }
+
         transform.localScale = new Vector3(1f, slideHeight, 1f);
         slideDirection = moveDirection.normalized;
     }
@@ -253,7 +264,18 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            rb.MovePosition(rb.position + slideDirection * moveSpeed * Time.deltaTime);
+            Vector3 slideMovement = slideDirection * moveSpeed * Time.deltaTime;
+            RaycastHit groundHit;
+
+            // Cast a ray from the current position to the desired slide position
+            if (Physics.Raycast(transform.position, slideMovement, out groundHit, slideMovement.magnitude, whatIsGround))
+            {
+                // Adjust the slide movement to stop at the point of impact
+                slideMovement = groundHit.point - transform.position;
+            }
+
+            // Move the character using the adjusted slide movement
+            rb.MovePosition(rb.position + slideMovement);
         }
     }
 
@@ -265,6 +287,31 @@ public class PlayerMovement : MonoBehaviour
         rb.useGravity = true;
         transform.localScale = new Vector3(1f, 1f, 1f);
         currentStamina -= 20f;
+
+        bool obstacleAboveHead = CheckObstacleAboveHead(); // Vérifie s'il y a un obstacle au-dessus de la tête
+
+        // Effectuer un raycast vers le bas pour détecter le sol
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, Vector3.down, out hit, Mathf.Infinity, whatIsGround))
+        {
+            // Ajuster la position du personnage en fonction de la distance au sol
+            float distanceToGround = hit.distance;
+            Vector3 newPosition = transform.position - new Vector3(0f, distanceToGround - playerHeight * 0.5f, 0f);
+            transform.position = newPosition;
+
+            // Vérifier si le personnage est toujours en contact avec le sol
+            bool groundedAfterSlide = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround);
+
+            // Si un obstacle est détecté au-dessus de la tête ou si le personnage n'est plus en contact avec le sol, passer en position "crouch"
+            if (obstacleAboveHead || !groundedAfterSlide)
+            {
+                StartCrouch();
+            }
+            else
+            {
+                EndCrouch(); // Si aucun obstacle n'est détecté au-dessus de la tête, arrêter le crouch
+            }
+        }
     }
 
     private void StartCrouch()
@@ -272,12 +319,17 @@ public class PlayerMovement : MonoBehaviour
         if (isCrouching) return;
 
         isCrouching = true;
-        rb.velocity = Vector3.zero;
-        transform.localScale = new Vector3(1f, 0.5f, 1f);
 
-        CapsuleCollider capsuleCollider = GetComponent<CapsuleCollider>();
-        capsuleCollider.height *= 0.5f;
-        capsuleCollider.center *= 0.5f;
+        rb.velocity = Vector3.zero;
+        //transform.localScale = new Vector3(1f, 0.5f, 1f);
+
+        RaycastHit groundHit;
+        if (Physics.Raycast(transform.position, Vector3.down, out groundHit, Mathf.Infinity, whatIsGround))
+        {
+            transform.position = groundHit.point + Vector3.up * slideHeight;
+        }
+
+        transform.localScale = new Vector3(1f, slideHeight, 1f);
     }
 
     private void EndCrouch()
@@ -301,6 +353,39 @@ public class PlayerMovement : MonoBehaviour
         isCrouching = false;
         transform.localScale = new Vector3(1f, 1f, 1f);
     }
+
+    private bool CheckHeadCollision()
+    {
+        Vector3 headPosition = transform.position + new Vector3(0f, playerHeight * 0.5f, 0f);
+        float headCheckDistance = playerHeight; // Distance de vérification de collision au-dessus de la tête
+
+        RaycastHit hit;
+        if (Physics.Raycast(headPosition, Vector3.up, out hit, headCheckDistance))
+        {
+            // Une collision a été détectée au-dessus de la tête
+            return true;
+        }
+
+        // Aucune collision détectée au-dessus de la tête
+        return false;
+    }
+
+    private bool CheckObstacleAboveHead()
+    {
+        Vector3 headPosition = transform.position + new Vector3(0f, playerHeight * 0.5f, 0f);
+        float headCheckDistance = playerHeight * 0.5f; // Distance de vérification de collision au-dessus de la tête
+
+        RaycastHit hit;
+        if (Physics.SphereCast(headPosition, headCheckDistance, Vector3.up, out hit, 0f, whatIsGround))
+        {
+            // Une collision a été détectée au-dessus de la tête
+            return true;
+        }
+
+        // Aucune collision détectée au-dessus de la tête
+        return false;
+    }
+
 
 
     private void StateHandler()
