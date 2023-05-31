@@ -9,8 +9,8 @@ public class newCamera1 : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        camera1.SetActive(true);
-        camera2.SetActive(false);
+        camera2.SetActive(true);
+        camera1.SetActive(false);
     }
 
 }

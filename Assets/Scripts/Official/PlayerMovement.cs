@@ -283,6 +283,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (!isSliding) return;
 
+
         isSliding = false;
         rb.useGravity = true;
         transform.localScale = new Vector3(1f, 1f, 1f);
@@ -319,7 +320,7 @@ public class PlayerMovement : MonoBehaviour
         if (isCrouching) return;
 
         isCrouching = true;
-
+        Debug.Log("je croush");
         rb.velocity = Vector3.zero;
         //transform.localScale = new Vector3(1f, 0.5f, 1f);
 
