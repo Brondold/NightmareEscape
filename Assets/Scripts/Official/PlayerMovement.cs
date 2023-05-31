@@ -76,6 +76,7 @@ public class PlayerMovement : MonoBehaviour
 
         readyToJump = true;
         currentStamina = maxStamina;
+
     }
 
     private void Update()
@@ -159,6 +160,7 @@ public class PlayerMovement : MonoBehaviour
         {
             targetSpeed *= sprintMultiplier;
             currentStamina -= Time.deltaTime * staminaDepletionRate;
+            Debug.Log("Sprint");
         }
 
         //Transition Vitesse Smooth
@@ -285,7 +287,7 @@ public class PlayerMovement : MonoBehaviour
 
         isSliding = false;
         rb.useGravity = true;
-        transform.localScale = new Vector3(1f, 1f, 1f);
+        transform.localScale = new Vector3(.7f, .7f, .7f);
         currentStamina -= 20f;
 
         bool obstacleAboveHead = CheckObstacleAboveHead(); // Vérifie s'il y a un obstacle au-dessus de la tête
@@ -351,7 +353,7 @@ public class PlayerMovement : MonoBehaviour
         transform.position = standingPosition;
 
         isCrouching = false;
-        transform.localScale = new Vector3(1f, 1f, 1f);
+        transform.localScale = new Vector3(.7f, .7f, .7f);
     }
 
     private bool CheckHeadCollision()
