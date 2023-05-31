@@ -51,6 +51,7 @@ public class PlayerMovement : MonoBehaviour
     public float playerHeight;
     public LayerMask whatIsGround;
     bool grounded;
+    [SerializeField] float fallTresholdVelocity = 5f;
 
     public Transform orientation;
 
@@ -81,9 +82,14 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        bool previousGrounded = grounded;
         //Ground Check
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround);
 
+        if(!previousGrounded && grounded)
+        {
+            Debug.Log("Fall Damage" + (rb.velocity.y < -fallTresholdVelocity));
+        }
         MyInput();
         SpeedControl();
         Stamina();

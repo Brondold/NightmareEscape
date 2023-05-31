@@ -29,7 +29,8 @@ Transform:
   m_LocalPosition: {x: 41.01, y: -0.00000011920929, z: -13.309}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 2351687057197827289}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -83,3 +84,53 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &4831618271530280685
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2351687057197827289}
+  - component: {fileID: 1897226140137668278}
+  m_Layer: 0
+  m_Name: Light Probe Group
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2351687057197827289
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4831618271530280685}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.73, y: 1.04, z: -0.14}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3432857461161741919}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!220 &1897226140137668278
+LightProbeGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4831618271530280685}
+  m_Enabled: 1
+  m_SourcePositions:
+  - {x: 1.1767311, y: 0.040272713, z: 1.7347175}
+  - {x: 1.1767311, y: 0.040272713, z: -0.2652825}
+  - {x: 1.2534467, y: -1, z: 1.74949}
+  - {x: 1.2534467, y: -1, z: -0.25050998}
+  - {x: -1.6780668, y: 0.040272713, z: 1.6532481}
+  - {x: -1.702308, y: 0.040272713, z: -0.22078238}
+  - {x: -1.6123046, y: -1, z: 1.6659112}
+  - {x: -1.6365458, y: -1, z: -0.20811902}
+  m_Dering: 1
