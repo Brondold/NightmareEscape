@@ -69,6 +69,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("UI")]
     public TextMeshProUGUI speedText; // Référence au composant TextMeshProUGUI pour afficher la vitesse
     public TextMeshProUGUI staminaText; // Référence au composant TextMeshProUGUI pour afficher la stamina
+    public GameObject mortText;
 
     private void Start()
     {
@@ -89,6 +90,17 @@ public class PlayerMovement : MonoBehaviour
         if(!previousGrounded && grounded)
         {
             Debug.Log("Fall Damage" + (rb.velocity.y < -fallTresholdVelocity));
+
+            if (rb.velocity.y < -fallTresholdVelocity)
+            {
+                float damage = Mathf.Abs(rb.velocity.y + fallTresholdVelocity);
+                Debug.Log("Damage Dealt :" + damage);
+                if(damage >=4)
+                {
+                    mortText.SetActive(true);
+                }
+            }
+
         }
         MyInput();
         SpeedControl();
