@@ -2,64 +2,48 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-
 public class Timer : MonoBehaviour
 {
-    private float totalTime = 0f;
-    private float startTime = 0f;
+    public float elapsedTime = 0f;
     private bool isTimerActive = false;
 
     public TextMeshProUGUI timerText;
     public GameObject Ecranfin;
 
+    public float ElapsedTime
+    {
+        get { return elapsedTime; }
+    }
 
-    void Update()
+    private void Update()
     {
         if (isTimerActive)
         {
-            totalTime += Time.deltaTime;
+            elapsedTime += Time.deltaTime;
             UpdateTimerText();
 
-            // Vérifier si le timer atteint les 3 minutes (180 secondes)
-            if (totalTime >= 10f)
+            // Vérifier si le timer atteint les 10 secondes
+            if (elapsedTime >= 10f)
             {
-                //ShowImage(); // Afficher l'image lorsque le timer atteint 3 minutes
                 Ecranfin.SetActive(true);
-                Debug.Log("J'ai passé 10secondes");
-            }
-
-            // Vérifier si le timer atteint ou dépasse 3 minutes (180 secondes)
-            if (totalTime >= 10f)
-            {
-                StopTimer(); // Arrêter le timer lorsque 3 minutes sont atteintes
+                Debug.Log("J'ai passé 10 secondes");
             }
         }
     }
 
-
-    void OnTriggerStay(Collider other)
+    private void UpdateTimerText()
     {
-        if (other.CompareTag("FIN"))
-        {
-            StopTimer();
-            Debug.Log("Je fonctionne");
-        }
-    }
-
-    void UpdateTimerText()
-    {
-        int minutes = Mathf.FloorToInt(totalTime / 60f);
-        int seconds = Mathf.FloorToInt(totalTime % 60f);
-        int milliseconds = Mathf.FloorToInt((totalTime * 1000f) % 1000f);
+        int minutes = Mathf.FloorToInt(elapsedTime / 60f);
+        int seconds = Mathf.FloorToInt(elapsedTime % 60f);
+        int milliseconds = Mathf.FloorToInt((elapsedTime * 1000f) % 1000f);
 
         string timerString = string.Format("{0:00}:{1:00}:{2:000}", minutes, seconds, milliseconds);
         timerText.text = timerString;
     }
 
-
     public void StartTimer()
     {
-        startTime = Time.time;
+        elapsedTime = 0f;
         isTimerActive = true;
     }
 
@@ -70,7 +54,6 @@ public class Timer : MonoBehaviour
 
     public void ResetTimer()
     {
-        totalTime = 0f;
-        startTime = 0f;
+        elapsedTime = 0f;
     }
 }

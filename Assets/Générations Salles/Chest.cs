@@ -14,11 +14,15 @@ public class Chest : MonoBehaviour
     public GameObject SalleC;
     public GameObject SalleD;
 
+    private void Start()
+    {
+        ShowItems();
+    }
     void Update()
     {
-        if (Input.GetKeyDown("space"))
+       // if (Input.GetKeyDown("space"))
         {
-            ShowItems();
+            //ShowItems();
         }
 
         //UNIQUEMENT POUR LES TESTS

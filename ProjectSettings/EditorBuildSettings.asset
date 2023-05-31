@@ -11,4 +11,10 @@ EditorBuildSettings:
   - enabled: 1
     path: "Assets/Scenes/G\xE9n\xE9ration Salle.unity"
     guid: 38742cfbda8ef184fb3d6b5591a9eca1
+  - enabled: 1
+    path: Assets/Scenes/Menu.unity
+    guid: 0704b56d1e265a4439ae43653db5a8da
+  - enabled: 1
+    path: "Assets/Scenes/G\xE9n 1.unity"
+    guid: cf6826f80b9a062429ea96f6b6d6863b
   m_configObjects: {}
