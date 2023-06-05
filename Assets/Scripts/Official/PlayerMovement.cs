@@ -336,6 +336,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void StartCrouch()
     {
+        CapsuleCollider playerCollider = GetComponent<CapsuleCollider>();
+
         if (isCrouching) return;
 
         isCrouching = true;
@@ -349,11 +351,18 @@ public class PlayerMovement : MonoBehaviour
             transform.position = groundHit.point + Vector3.up * slideHeight;
         }
 
-        transform.localScale = new Vector3(1f, slideHeight, 1f);
+        playerCollider.height = .45f;
+        playerCollider.radius = .22f;
+        playerCollider.center = new Vector3(0f, -0.8f, -0.005f);
+
+        //transform.localScale = new Vector3(1f, slideHeight, 1f);
+
     }
 
     private void EndCrouch()
     {
+        CapsuleCollider playerCollider = GetComponent<CapsuleCollider>();
+
         if (!isCrouching) return;
 
         Vector3 standingPosition = transform.position + new Vector3(0f, playerHeight * 0.25f, 0f);
@@ -371,6 +380,10 @@ public class PlayerMovement : MonoBehaviour
         transform.position = standingPosition;
 
         isCrouching = false;
+        playerCollider.height = .9f;
+        playerCollider.radius = .22f;
+        playerCollider.center = new Vector3(0f, -0.556f, -0.005f);
+
         transform.localScale = new Vector3(.7f, .7f, .7f);
     }
 
