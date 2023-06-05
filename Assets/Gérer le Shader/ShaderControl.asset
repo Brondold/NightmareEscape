@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: ShaderControl
   m_EditorClassIdentifier: 
   startIntensity: 0
-  intensityMultiplier: 1
+  intensityMultiplier: 0.005555556

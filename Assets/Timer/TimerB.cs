@@ -7,11 +7,12 @@ public class TimerB : MonoBehaviour
 
     private void Start()
     {
-        GetComponent<Button>().onClick.AddListener(OnClick);
+        timer.StartTimer();
+        // GetComponent<Button>().onClick.AddListener(OnClick);
     }
 
-    private void OnClick()
-    {
-        timer.StartTimer();
-    }
+    //private void OnClick()
+   // {
+        //timer.StartTimer();
+   // }
 }

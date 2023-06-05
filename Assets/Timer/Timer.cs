@@ -9,6 +9,8 @@ public class Timer : MonoBehaviour
 
     public TextMeshProUGUI timerText;
     public GameObject Ecranfin;
+    public GameObject Canas;
+    private bool IsTouchingFin = false;
 
     public float ElapsedTime
     {
@@ -22,12 +24,22 @@ public class Timer : MonoBehaviour
             elapsedTime += Time.deltaTime;
             UpdateTimerText();
 
-            // Vérifier si le timer atteint les 10 secondes
-            if (elapsedTime >= 10f)
+            // Vérifier si le timer atteint les 180 secondes
+            if (elapsedTime >= 180f)
             {
                 Ecranfin.SetActive(true);
-                Debug.Log("J'ai passé 10 secondes");
+                StopTimer();
+                Debug.Log("J'ai passé 180 secondes");
             }
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("FIN"))
+        {
+            IsTouchingFin = true;
+            StopTimer();
         }
     }
 
@@ -48,12 +60,23 @@ public class Timer : MonoBehaviour
     }
 
     public void StopTimer()
-    {
-        isTimerActive = false;
+    { 
+        Canas.SetActive(true);
+        isTimerActive = false; 
     }
 
     public void ResetTimer()
     {
         elapsedTime = 0f;
+    }
+
+    public int TimerToInteger()
+    {
+        int minutes = Mathf.FloorToInt(elapsedTime / 60f);
+        int seconds = Mathf.FloorToInt(elapsedTime % 60f);
+        int milliseconds = Mathf.FloorToInt((elapsedTime * 1000f) % 1000f);
+
+        int totalMilliseconds = minutes * 60000 + seconds * 1000 + milliseconds;
+        return totalMilliseconds;
     }
 }
