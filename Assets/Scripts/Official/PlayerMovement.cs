@@ -18,6 +18,9 @@ public class PlayerMovement : MonoBehaviour
 
     public bool restricted;
 
+    public CapsuleCollider crouch;
+    public CapsuleCollider idle;
+
     [Header("Movement")]
     public float moveSpeed;
     public float sprintMultiplier;
@@ -130,6 +133,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void MyInput()
     {
+        bool obstacleAboveHead = CheckObstacleAboveHead();
+
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
@@ -154,13 +159,15 @@ public class PlayerMovement : MonoBehaviour
         }
 
         //Crouch
-        if (Input.GetKey(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
+        if (Input.GetKeyDown(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
         {
             StartCrouch();
+            Debug.Log("Crouch");
         }
-        else
+        if(Input.GetKeyUp(crouchKey) && grounded &&!isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !obstacleAboveHead)
         {
             EndCrouch();
+            Debug.Log("StopCrouch");
         }
     }
 
@@ -264,13 +271,12 @@ public class PlayerMovement : MonoBehaviour
         rb.velocity = Vector3.zero;
 
         // Adjust the position to align with the ground
-        RaycastHit groundHit;
-        if (Physics.Raycast(transform.position, Vector3.down, out groundHit, Mathf.Infinity, whatIsGround))
-        {
-            transform.position = groundHit.point + Vector3.up * slideHeight;
-        }
+        //RaycastHit groundHit;
 
-        transform.localScale = new Vector3(1f, slideHeight, 1f);
+        idle.enabled = false;
+        crouch.enabled = true;
+
+        //transform.localScale = new Vector3(1f, slideHeight, 1f);
         slideDirection = moveDirection.normalized;
     }
 
@@ -305,55 +311,35 @@ public class PlayerMovement : MonoBehaviour
 
         isSliding = false;
         rb.useGravity = true;
-        transform.localScale = new Vector3(.7f, .7f, .7f);
         currentStamina -= 20f;
 
         bool obstacleAboveHead = CheckObstacleAboveHead(); // Vérifie s'il y a un obstacle au-dessus de la tête
 
         // Effectuer un raycast vers le bas pour détecter le sol
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, Vector3.down, out hit, Mathf.Infinity, whatIsGround))
-        {
-            // Ajuster la position du personnage en fonction de la distance au sol
-            float distanceToGround = hit.distance;
-            Vector3 newPosition = transform.position - new Vector3(0f, distanceToGround - playerHeight * 0.5f, 0f);
-            transform.position = newPosition;
-
-            // Vérifier si le personnage est toujours en contact avec le sol
-            bool groundedAfterSlide = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround);
-
-            // Si un obstacle est détecté au-dessus de la tête ou si le personnage n'est plus en contact avec le sol, passer en position "crouch"
-            if (obstacleAboveHead || !groundedAfterSlide)
-            {
-                StartCrouch();
-            }
-            else
-            {
-                EndCrouch(); // Si aucun obstacle n'est détecté au-dessus de la tête, arrêter le crouch
-            }
-        }
+        idle.enabled = true;
+        crouch.enabled = false;
     }
 
     private void StartCrouch()
     {
-        CapsuleCollider playerCollider = GetComponent<CapsuleCollider>();
 
         if (isCrouching) return;
 
         isCrouching = true;
 
         rb.velocity = Vector3.zero;
+
         //transform.localScale = new Vector3(1f, 0.5f, 1f);
 
-        RaycastHit groundHit;
-        if (Physics.Raycast(transform.position, Vector3.down, out groundHit, Mathf.Infinity, whatIsGround))
-        {
-            transform.position = groundHit.point + Vector3.up * slideHeight;
-        }
+        
 
-        playerCollider.height = .45f;
-        playerCollider.radius = .22f;
-        playerCollider.center = new Vector3(0f, -0.8f, -0.005f);
+        idle.enabled = false;
+        crouch.enabled = true;
+        
+        //playerCollider.height = .45f;
+        //playerCollider.radius = .22f;
+        //playerCollider.center = new Vector3(0f, -0.8f, -0.005f);
 
         //transform.localScale = new Vector3(1f, slideHeight, 1f);
 
@@ -361,30 +347,26 @@ public class PlayerMovement : MonoBehaviour
 
     private void EndCrouch()
     {
-        CapsuleCollider playerCollider = GetComponent<CapsuleCollider>();
 
         if (!isCrouching) return;
 
-        Vector3 standingPosition = transform.position + new Vector3(0f, playerHeight * 0.25f, 0f);
-        RaycastHit hit;
-        float standingHeight = playerHeight * 2f; // Hauteur de raycast pour vérifier les collisions au-dessus du personnage
-
-        // Effectuer un raycast vers le haut pour vérifier les collisions
-        if (Physics.Raycast(standingPosition, Vector3.up, out hit, standingHeight))
-        {
-            // Si une collision est détectée, empêcher le personnage de se relever
-            return;
-        }
+        //Vector3 standingPosition = transform.position + new Vector3(0f, playerHeight * 0.25f, 0f);
+        //RaycastHit hit;
+        //float standingHeight = playerHeight * 2f; // Hauteur de raycast pour vérifier les collisions au-dessus du personnage
 
         // Si aucune collision n'est détectée, le personnage peut se relever
-        transform.position = standingPosition;
+        //transform.position = standingPosition;
 
         isCrouching = false;
-        playerCollider.height = .9f;
-        playerCollider.radius = .22f;
-        playerCollider.center = new Vector3(0f, -0.556f, -0.005f);
 
-        transform.localScale = new Vector3(.7f, .7f, .7f);
+        idle.enabled = true;
+        crouch.enabled = false;
+
+        //playerCollider.height = .9f;
+        //playerCollider.radius = .22f;
+        //playerCollider.center = new Vector3(0f, -0.556f, -0.005f);
+
+        //transform.localScale = new Vector3(.7f, .7f, .7f);
     }
 
     private bool CheckHeadCollision()
