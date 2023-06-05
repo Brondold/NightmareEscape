@@ -69,10 +69,16 @@ public class PlayerMovement : MonoBehaviour
 
     Rigidbody rb;
 
+    [Header("HeadCheck")]
+    public Transform headCheck; // Référence à l'objet vide placé au-dessus de la tête du personnage
+    public float detectionRadius = 0.5f; // Rayon de détection
+    public bool isObjectDetected = false;
+
     [Header("UI")]
     public TextMeshProUGUI speedText; // Référence au composant TextMeshProUGUI pour afficher la vitesse
     public TextMeshProUGUI staminaText; // Référence au composant TextMeshProUGUI pour afficher la stamina
     public GameObject mortText;
+
 
     private void Start()
     {
@@ -87,9 +93,11 @@ public class PlayerMovement : MonoBehaviour
     private void Update()
     {
         bool previousGrounded = grounded;
+
         //Ground Check
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround);
 
+        //Fall Damage & detection for death from Fall Damage
         if(!previousGrounded && grounded)
         {
             Debug.Log("Fall Damage" + (rb.velocity.y < -fallTresholdVelocity));
@@ -105,15 +113,30 @@ public class PlayerMovement : MonoBehaviour
             }
 
         }
+
+        //HeadCheckCollision with SphereRadius
+        Collider[] colliders = Physics.OverlapSphere(headCheck.position, detectionRadius);
+
+        isObjectDetected = false;
+
+        foreach (Collider collider in colliders)
+        {
+            if (collider != null && collider.gameObject != gameObject && collider.gameObject.tag != "Player")
+            {
+                Debug.Log("Objet : " + collider.gameObject.name);
+                isObjectDetected = true;
+            }
+        }
+
         MyInput();
         SpeedControl();
         Stamina();
 
         // handle drag
-        if (grounded)
-            rb.drag = groundDrag;
-        else
-            rb.drag = 0;
+        //if (grounded)
+          //.  rb.drag = groundDrag;
+        //.else
+        //    rb.drag = 0;
 
         // Mettre à jour le texte de la vitesse dans l'UI
         speedText.text = rb.velocity.magnitude.ToString("F2");
@@ -124,6 +147,11 @@ public class PlayerMovement : MonoBehaviour
     private void FixedUpdate()
     {
         MovePlayer();
+
+        if(Input.GetKey(crouchKey) == false && !isObjectDetected)
+        {
+            EndCrouch();
+        }
 
         if (isSliding)
         {
@@ -153,9 +181,13 @@ public class PlayerMovement : MonoBehaviour
             StartSlide();
         }
 
-        if (Input.GetKeyUp(slideKey))
+        if (Input.GetKeyUp(slideKey) && !isObjectDetected)
         {
             EndSlide();
+        }
+        if(Input.GetKeyUp(slideKey) && isObjectDetected)
+        {
+            StartCrouch();
         }
 
         //Crouch
@@ -164,7 +196,7 @@ public class PlayerMovement : MonoBehaviour
             StartCrouch();
             Debug.Log("Crouch");
         }
-        if(Input.GetKeyUp(crouchKey) && grounded &&!isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !obstacleAboveHead)
+        if(Input.GetKeyUp(crouchKey) && grounded &&!isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
         {
             EndCrouch();
             Debug.Log("StopCrouch");
@@ -317,8 +349,16 @@ public class PlayerMovement : MonoBehaviour
 
         // Effectuer un raycast vers le bas pour détecter le sol
         RaycastHit hit;
-        idle.enabled = true;
-        crouch.enabled = false;
+
+        if (isObjectDetected)
+        {
+            StartCrouch();
+        }
+        else
+        {
+            idle.enabled = true;
+            crouch.enabled = false;
+        }      
     }
 
     private void StartCrouch()
@@ -328,20 +368,10 @@ public class PlayerMovement : MonoBehaviour
 
         isCrouching = true;
 
-        rb.velocity = Vector3.zero;
-
-        //transform.localScale = new Vector3(1f, 0.5f, 1f);
-
-        
+        rb.velocity = Vector3.zero;       
 
         idle.enabled = false;
         crouch.enabled = true;
-        
-        //playerCollider.height = .45f;
-        //playerCollider.radius = .22f;
-        //playerCollider.center = new Vector3(0f, -0.8f, -0.005f);
-
-        //transform.localScale = new Vector3(1f, slideHeight, 1f);
 
     }
 
@@ -350,23 +380,11 @@ public class PlayerMovement : MonoBehaviour
 
         if (!isCrouching) return;
 
-        //Vector3 standingPosition = transform.position + new Vector3(0f, playerHeight * 0.25f, 0f);
-        //RaycastHit hit;
-        //float standingHeight = playerHeight * 2f; // Hauteur de raycast pour vérifier les collisions au-dessus du personnage
-
-        // Si aucune collision n'est détectée, le personnage peut se relever
-        //transform.position = standingPosition;
-
         isCrouching = false;
 
         idle.enabled = true;
         crouch.enabled = false;
 
-        //playerCollider.height = .9f;
-        //playerCollider.radius = .22f;
-        //playerCollider.center = new Vector3(0f, -0.556f, -0.005f);
-
-        //transform.localScale = new Vector3(.7f, .7f, .7f);
     }
 
     private bool CheckHeadCollision()
@@ -401,7 +419,11 @@ public class PlayerMovement : MonoBehaviour
         return false;
     }
 
-
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(headCheck.position, detectionRadius);
+    }
 
     private void StateHandler()
     {
