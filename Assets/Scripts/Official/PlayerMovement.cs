@@ -66,6 +66,7 @@ public class PlayerMovement : MonoBehaviour
     Vector3 slideStartPosition;
     bool isSliding;
     bool isCrouching;
+    bool isWalking;
 
     Rigidbody rb;
 
@@ -135,11 +136,20 @@ public class PlayerMovement : MonoBehaviour
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
+        Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+
+        if (grounded)
+        {
+            animator.SetBool("jump", false);
+        }
+
         //Jump
         if (Input.GetKeyDown(jumpKey) && readyToJump && grounded && !isCrouching)
         {
             readyToJump = false;
             Jump();
+
+            animator.SetBool("jump", true);
 
             Invoke(nameof(ResetJump), jumpCooldown);
         }
@@ -160,29 +170,55 @@ public class PlayerMovement : MonoBehaviour
         }
 
         //Crouch
-        if (Input.GetKeyDown(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
+        if (Input.GetKey(KeyCode.C) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
         {
             StartCrouch();
             Debug.Log("Crouch");
 
-            animator.SetBool("crouchIdle", true);
+            if ((targetVelocity.x != 0 || targetVelocity.z != 0) && isCrouching)
+            {
+                animator.SetBool("crouchIdle", false);
+                animator.SetBool("crouchWalk", true);
+
+                Debug.Log("CrouchWalking");
+            }
+            else
+            {
+                animator.SetBool("crouchIdle", true);
+                animator.SetBool("crouchWalk", false);
+            }
+
+           
         }
-        if (Input.GetKeyUp(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
+        if (Input.GetKeyUp(KeyCode.C) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
         {
             EndCrouch();
             Debug.Log("StopCrouch");
             animator.SetBool("crouchIdle", false);
+            
         }
 
-        //MyInput();
+        //Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+
+        if ((targetVelocity.x != 0 || targetVelocity.z != 0) && !isCrouching)
+        {
+            isWalking = true;
+            animator.SetBool("walk", true);
+            animator.SetBool("crouchWalk", false);
+            Debug.Log("Walking");
+        }
+        else
+        {
+            isWalking = false;
+            animator.SetBool("walk", false);
+            //Debug.Log("NotWalking");
+        }
+
+        
+        
         SpeedControl();
         Stamina();
 
-        // handle drag
-        //if (grounded)
-          //.  rb.drag = groundDrag;
-        //.else
-        //    rb.drag = 0;
 
         // Mettre à jour le texte de la vitesse dans l'UI
         speedText.text = rb.velocity.magnitude.ToString("F2");
@@ -194,7 +230,7 @@ public class PlayerMovement : MonoBehaviour
     {
         MovePlayer();
 
-        if(Input.GetKey(crouchKey) == false && !isObjectDetected)
+        if(Input.GetKey(KeyCode.C) == false && !isObjectDetected)
         {
             EndCrouch();
         }
@@ -202,52 +238,6 @@ public class PlayerMovement : MonoBehaviour
         if (isSliding)
         {
             Slide();
-        }
-    }
-
-    private void MyInput()
-    {
-
-        horizontalInput = Input.GetAxisRaw("Horizontal");
-        verticalInput = Input.GetAxisRaw("Vertical");
-
-        //Jump
-        if (Input.GetKeyDown(jumpKey) && readyToJump && grounded && !isCrouching)
-        {
-            readyToJump = false;
-            Jump();
-
-            Invoke(nameof(ResetJump), jumpCooldown);
-        }
-
-        //Slide
-        if (Input.GetKeyDown(slideKey) && Input.GetKey(sprintKey) && grounded && currentStamina >= 20f && !isCrouching)
-        {
-            StartSlide();
-        }
-
-        if (Input.GetKeyUp(slideKey) && !isObjectDetected)
-        {
-            EndSlide();
-        }
-        if(Input.GetKeyUp(slideKey) && isObjectDetected)
-        {
-            StartCrouch();
-        }
-
-        //Crouch
-        if (Input.GetKeyDown(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
-        {
-            StartCrouch();
-            Debug.Log("Crouch");
-
-            animator.SetBool("crouchIdle", true);
-        }
-        if(Input.GetKeyUp(crouchKey) && grounded &&!isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
-        {
-            EndCrouch();
-            Debug.Log("StopCrouch");
-            animator.SetBool("crouchIdle", false);
         }
     }
 
@@ -414,7 +404,7 @@ public class PlayerMovement : MonoBehaviour
 
         isCrouching = true;
 
-        rb.velocity = Vector3.zero;       
+        //rb.velocity = Vector3.zero;       
 
         idle.enabled = false;
         crouch.enabled = true;
