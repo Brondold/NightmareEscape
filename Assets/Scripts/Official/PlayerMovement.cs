@@ -135,20 +135,14 @@ public class PlayerMovement : MonoBehaviour
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
-        Vector3 movement = new Vector3(horizontalInput, 0.0f, verticalInput);
-        transform.rotation = Quaternion.LookRotation(movement);
-
         //Jump
         if (Input.GetKeyDown(jumpKey) && readyToJump && grounded && !isCrouching)
         {
             readyToJump = false;
             Jump();
 
-            animator.SetBool("jump", true);
-
             Invoke(nameof(ResetJump), jumpCooldown);
         }
-
 
         //Slide
         if (Input.GetKeyDown(slideKey) && Input.GetKey(sprintKey) && grounded && currentStamina >= 20f && !isCrouching)
@@ -184,6 +178,12 @@ public class PlayerMovement : MonoBehaviour
         SpeedControl();
         Stamina();
 
+        // handle drag
+        //if (grounded)
+          //.  rb.drag = groundDrag;
+        //.else
+        //    rb.drag = 0;
+
         // Mettre à jour le texte de la vitesse dans l'UI
         speedText.text = rb.velocity.magnitude.ToString("F2");
         // Mettre à jour le texte de la stamina dans l'UI
@@ -202,6 +202,52 @@ public class PlayerMovement : MonoBehaviour
         if (isSliding)
         {
             Slide();
+        }
+    }
+
+    private void MyInput()
+    {
+
+        horizontalInput = Input.GetAxisRaw("Horizontal");
+        verticalInput = Input.GetAxisRaw("Vertical");
+
+        //Jump
+        if (Input.GetKeyDown(jumpKey) && readyToJump && grounded && !isCrouching)
+        {
+            readyToJump = false;
+            Jump();
+
+            Invoke(nameof(ResetJump), jumpCooldown);
+        }
+
+        //Slide
+        if (Input.GetKeyDown(slideKey) && Input.GetKey(sprintKey) && grounded && currentStamina >= 20f && !isCrouching)
+        {
+            StartSlide();
+        }
+
+        if (Input.GetKeyUp(slideKey) && !isObjectDetected)
+        {
+            EndSlide();
+        }
+        if(Input.GetKeyUp(slideKey) && isObjectDetected)
+        {
+            StartCrouch();
+        }
+
+        //Crouch
+        if (Input.GetKeyDown(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
+        {
+            StartCrouch();
+            Debug.Log("Crouch");
+
+            animator.SetBool("crouchIdle", true);
+        }
+        if(Input.GetKeyUp(crouchKey) && grounded &&!isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
+        {
+            EndCrouch();
+            Debug.Log("StopCrouch");
+            animator.SetBool("crouchIdle", false);
         }
     }
 
