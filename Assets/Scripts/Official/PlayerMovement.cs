@@ -26,8 +26,6 @@ public class PlayerMovement : MonoBehaviour
     public float sprintMultiplier;
     public float slideDistance;
     public float slideHeight;
-    Vector3 lastPos;
-    private Vector3 previousPosition;
 
     public float groundDrag;
 
@@ -94,14 +92,10 @@ public class PlayerMovement : MonoBehaviour
         readyToJump = true;
         currentStamina = maxStamina;
 
-        animator.SetBool("idle", true);
-
-        previousPosition = transform.position;
     }
 
     private void Update()
     {
-
         bool previousGrounded = grounded;
 
         //Ground Check
@@ -141,30 +135,8 @@ public class PlayerMovement : MonoBehaviour
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
-        if (rb.transform.position != lastPos)
-        {
-            //animator.SetBool("walk", true);
-            //animator.SetBool("idle", false);
-        }
-        else
-        {
-            //animator.SetBool("walk", false);
-        }
-
-        lastPos = rb.transform.position;
-
-        //Vector3 movement = new Vector3(horizontalInput, 0.0f, verticalInput);
-        //transform.rotation = Quaternion.LookRotation(movement);
-
-        Vector3 currentPosition = transform.position;
-        Vector3 moveDirection = currentPosition - previousPosition;
-        previousPosition = currentPosition;
-
-        if (moveDirection != Vector3.zero)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-            transform.rotation = targetRotation;
-        }
+        Vector3 movement = new Vector3(horizontalInput, 0.0f, verticalInput);
+        transform.rotation = Quaternion.LookRotation(movement);
 
         //Jump
         if (Input.GetKeyDown(jumpKey) && readyToJump && grounded && !isCrouching)
@@ -199,16 +171,7 @@ public class PlayerMovement : MonoBehaviour
             StartCrouch();
             Debug.Log("Crouch");
 
-            //animator.SetBool("crouchIdle", true);
-
-            if(rb.velocity.x > 0)
-            {
-                animator.SetBool("crouchWalk", true);
-            }
-            else
-            {
-                animator.SetBool("crouchIdle", true);
-            }
+            animator.SetBool("crouchIdle", true);
         }
         if (Input.GetKeyUp(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
         {
@@ -248,7 +211,6 @@ public class PlayerMovement : MonoBehaviour
 
         //Calcul Direction Mouvement
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
-        
 
         //Calcul de la vitesse du personnage lors de la Course
         float targetSpeed = moveSpeed;
