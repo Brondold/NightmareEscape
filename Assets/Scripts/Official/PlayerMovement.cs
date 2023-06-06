@@ -74,6 +74,10 @@ public class PlayerMovement : MonoBehaviour
     public float detectionRadius = 0.5f; // Rayon de détection
     public bool isObjectDetected = false;
 
+
+    [Header("Animation")]
+    public Animator animator;
+
     [Header("UI")]
     public TextMeshProUGUI speedText; // Référence au composant TextMeshProUGUI pour afficher la vitesse
     public TextMeshProUGUI staminaText; // Référence au composant TextMeshProUGUI pour afficher la stamina
@@ -128,7 +132,49 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        MyInput();
+        horizontalInput = Input.GetAxisRaw("Horizontal");
+        verticalInput = Input.GetAxisRaw("Vertical");
+
+        //Jump
+        if (Input.GetKeyDown(jumpKey) && readyToJump && grounded && !isCrouching)
+        {
+            readyToJump = false;
+            Jump();
+
+            Invoke(nameof(ResetJump), jumpCooldown);
+        }
+
+        //Slide
+        if (Input.GetKeyDown(slideKey) && Input.GetKey(sprintKey) && grounded && currentStamina >= 20f && !isCrouching)
+        {
+            StartSlide();
+        }
+
+        if (Input.GetKeyUp(slideKey) && !isObjectDetected)
+        {
+            EndSlide();
+        }
+        if (Input.GetKeyUp(slideKey) && isObjectDetected)
+        {
+            StartCrouch();
+        }
+
+        //Crouch
+        if (Input.GetKeyDown(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
+        {
+            StartCrouch();
+            Debug.Log("Crouch");
+
+            animator.SetBool("crouchIdle", true);
+        }
+        if (Input.GetKeyUp(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
+        {
+            EndCrouch();
+            Debug.Log("StopCrouch");
+            animator.SetBool("crouchIdle", false);
+        }
+
+        //MyInput();
         SpeedControl();
         Stamina();
 
@@ -161,7 +207,6 @@ public class PlayerMovement : MonoBehaviour
 
     private void MyInput()
     {
-        bool obstacleAboveHead = CheckObstacleAboveHead();
 
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
@@ -195,11 +240,14 @@ public class PlayerMovement : MonoBehaviour
         {
             StartCrouch();
             Debug.Log("Crouch");
+
+            animator.SetBool("crouchIdle", true);
         }
         if(Input.GetKeyUp(crouchKey) && grounded &&!isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
         {
             EndCrouch();
             Debug.Log("StopCrouch");
+            animator.SetBool("crouchIdle", false);
         }
     }
 
@@ -345,8 +393,6 @@ public class PlayerMovement : MonoBehaviour
         rb.useGravity = true;
         currentStamina -= 20f;
 
-        bool obstacleAboveHead = CheckObstacleAboveHead(); // Vérifie s'il y a un obstacle au-dessus de la tête
-
         // Effectuer un raycast vers le bas pour détecter le sol
         RaycastHit hit;
 
@@ -385,38 +431,6 @@ public class PlayerMovement : MonoBehaviour
         idle.enabled = true;
         crouch.enabled = false;
 
-    }
-
-    private bool CheckHeadCollision()
-    {
-        Vector3 headPosition = transform.position + new Vector3(0f, playerHeight * 0.5f, 0f);
-        float headCheckDistance = playerHeight; // Distance de vérification de collision au-dessus de la tête
-
-        RaycastHit hit;
-        if (Physics.Raycast(headPosition, Vector3.up, out hit, headCheckDistance))
-        {
-            // Une collision a été détectée au-dessus de la tête
-            return true;
-        }
-
-        // Aucune collision détectée au-dessus de la tête
-        return false;
-    }
-
-    private bool CheckObstacleAboveHead()
-    {
-        Vector3 headPosition = transform.position + new Vector3(0f, playerHeight * 0.5f, 0f);
-        float headCheckDistance = playerHeight * 0.5f; // Distance de vérification de collision au-dessus de la tête
-
-        RaycastHit hit;
-        if (Physics.SphereCast(headPosition, headCheckDistance, Vector3.up, out hit, 0f, whatIsGround))
-        {
-            // Une collision a été détectée au-dessus de la tête
-            return true;
-        }
-
-        // Aucune collision détectée au-dessus de la tête
-        return false;
     }
 
     private void OnDrawGizmosSelected()
