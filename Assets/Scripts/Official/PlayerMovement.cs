@@ -18,6 +18,9 @@ public class PlayerMovement : MonoBehaviour
 
     public bool restricted;
 
+    public CapsuleCollider crouch;
+    public CapsuleCollider idle;
+
     [Header("Movement")]
     public float moveSpeed;
     public float sprintMultiplier;
@@ -51,6 +54,7 @@ public class PlayerMovement : MonoBehaviour
     public float playerHeight;
     public LayerMask whatIsGround;
     bool grounded;
+    [SerializeField] float fallTresholdVelocity = 5f;
 
     public Transform orientation;
 
@@ -65,9 +69,20 @@ public class PlayerMovement : MonoBehaviour
 
     Rigidbody rb;
 
+    [Header("HeadCheck")]
+    public Transform headCheck; // Référence à l'objet vide placé au-dessus de la tête du personnage
+    public float detectionRadius = 0.5f; // Rayon de détection
+    public bool isObjectDetected = false;
+
+
+    [Header("Animation")]
+    public Animator animator;
+
     [Header("UI")]
     public TextMeshProUGUI speedText; // Référence au composant TextMeshProUGUI pour afficher la vitesse
     public TextMeshProUGUI staminaText; // Référence au composant TextMeshProUGUI pour afficher la stamina
+    public GameObject mortText;
+
 
     private void Start()
     {
@@ -76,41 +91,47 @@ public class PlayerMovement : MonoBehaviour
 
         readyToJump = true;
         currentStamina = maxStamina;
+
     }
 
     private void Update()
     {
+        bool previousGrounded = grounded;
+
         //Ground Check
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround);
 
-        MyInput();
-        SpeedControl();
-        Stamina();
-
-        // handle drag
-        if (grounded)
-            rb.drag = groundDrag;
-        else
-            rb.drag = 0;
-
-        // Mettre à jour le texte de la vitesse dans l'UI
-        speedText.text = rb.velocity.magnitude.ToString("F2");
-        // Mettre à jour le texte de la stamina dans l'UI
-        staminaText.text = currentStamina.ToString("F0");
-    }
-
-    private void FixedUpdate()
-    {
-        MovePlayer();
-
-        if (isSliding)
+        //Fall Damage & detection for death from Fall Damage
+        if(!previousGrounded && grounded)
         {
-            Slide();
-        }
-    }
+            Debug.Log("Fall Damage" + (rb.velocity.y < -fallTresholdVelocity));
 
-    private void MyInput()
-    {
+            if (rb.velocity.y < -fallTresholdVelocity)
+            {
+                float damage = Mathf.Abs(rb.velocity.y + fallTresholdVelocity);
+                Debug.Log("Damage Dealt :" + damage);
+                if(damage >=4)
+                {
+                    mortText.SetActive(true);
+                }
+            }
+
+        }
+
+        //HeadCheckCollision with SphereRadius
+        Collider[] colliders = Physics.OverlapSphere(headCheck.position, detectionRadius);
+
+        isObjectDetected = false;
+
+        foreach (Collider collider in colliders)
+        {
+            if (collider != null && collider.gameObject != gameObject && collider.gameObject.tag != "Player")
+            {
+                Debug.Log("Objet : " + collider.gameObject.name);
+                isObjectDetected = true;
+            }
+        }
+
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
@@ -129,19 +150,105 @@ public class PlayerMovement : MonoBehaviour
             StartSlide();
         }
 
-        if (Input.GetKeyUp(slideKey))
+        if (Input.GetKeyUp(slideKey) && !isObjectDetected)
         {
             EndSlide();
         }
-
-        //Crouch
-        if (Input.GetKey(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
+        if (Input.GetKeyUp(slideKey) && isObjectDetected)
         {
             StartCrouch();
         }
-        else
+
+
+        //Crouch
+        if (Input.GetKeyDown(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
+        {
+            StartCrouch();
+            Debug.Log("Crouch");
+
+            animator.SetBool("crouchIdle", true);
+        }
+        if (Input.GetKeyUp(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
         {
             EndCrouch();
+            Debug.Log("StopCrouch");
+            animator.SetBool("crouchIdle", false);
+        }
+
+        //MyInput();
+        SpeedControl();
+        Stamina();
+
+        // handle drag
+        //if (grounded)
+          //.  rb.drag = groundDrag;
+        //.else
+        //    rb.drag = 0;
+
+        // Mettre à jour le texte de la vitesse dans l'UI
+        speedText.text = rb.velocity.magnitude.ToString("F2");
+        // Mettre à jour le texte de la stamina dans l'UI
+        staminaText.text = currentStamina.ToString("F0");
+    }
+
+    private void FixedUpdate()
+    {
+        MovePlayer();
+
+        if(Input.GetKey(crouchKey) == false && !isObjectDetected)
+        {
+            EndCrouch();
+        }
+
+        if (isSliding)
+        {
+            Slide();
+        }
+    }
+
+    private void MyInput()
+    {
+
+        horizontalInput = Input.GetAxisRaw("Horizontal");
+        verticalInput = Input.GetAxisRaw("Vertical");
+
+        //Jump
+        if (Input.GetKeyDown(jumpKey) && readyToJump && grounded && !isCrouching)
+        {
+            readyToJump = false;
+            Jump();
+
+            Invoke(nameof(ResetJump), jumpCooldown);
+        }
+
+        //Slide
+        if (Input.GetKeyDown(slideKey) && Input.GetKey(sprintKey) && grounded && currentStamina >= 20f && !isCrouching)
+        {
+            StartSlide();
+        }
+
+        if (Input.GetKeyUp(slideKey) && !isObjectDetected)
+        {
+            EndSlide();
+        }
+        if(Input.GetKeyUp(slideKey) && isObjectDetected)
+        {
+            StartCrouch();
+        }
+
+        //Crouch
+        if (Input.GetKeyDown(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
+        {
+            StartCrouch();
+            Debug.Log("Crouch");
+
+            animator.SetBool("crouchIdle", true);
+        }
+        if(Input.GetKeyUp(crouchKey) && grounded &&!isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
+        {
+            EndCrouch();
+            Debug.Log("StopCrouch");
+            animator.SetBool("crouchIdle", false);
         }
     }
 
@@ -159,6 +266,7 @@ public class PlayerMovement : MonoBehaviour
         {
             targetSpeed *= sprintMultiplier;
             currentStamina -= Time.deltaTime * staminaDepletionRate;
+            Debug.Log("Sprint");
         }
 
         //Transition Vitesse Smooth
@@ -244,13 +352,12 @@ public class PlayerMovement : MonoBehaviour
         rb.velocity = Vector3.zero;
 
         // Adjust the position to align with the ground
-        RaycastHit groundHit;
-        if (Physics.Raycast(transform.position, Vector3.down, out groundHit, Mathf.Infinity, whatIsGround))
-        {
-            transform.position = groundHit.point + Vector3.up * slideHeight;
-        }
+        //RaycastHit groundHit;
 
-        transform.localScale = new Vector3(1f, slideHeight, 1f);
+        idle.enabled = false;
+        crouch.enabled = true;
+
+        //transform.localScale = new Vector3(1f, slideHeight, 1f);
         slideDirection = moveDirection.normalized;
     }
 
@@ -283,111 +390,55 @@ public class PlayerMovement : MonoBehaviour
     {
         if (!isSliding) return;
 
-
         isSliding = false;
         rb.useGravity = true;
-        transform.localScale = new Vector3(1f, 1f, 1f);
         currentStamina -= 20f;
-
-        bool obstacleAboveHead = CheckObstacleAboveHead(); // Vérifie s'il y a un obstacle au-dessus de la tête
 
         // Effectuer un raycast vers le bas pour détecter le sol
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, Vector3.down, out hit, Mathf.Infinity, whatIsGround))
+
+        if (isObjectDetected)
         {
-            // Ajuster la position du personnage en fonction de la distance au sol
-            float distanceToGround = hit.distance;
-            Vector3 newPosition = transform.position - new Vector3(0f, distanceToGround - playerHeight * 0.5f, 0f);
-            transform.position = newPosition;
-
-            // Vérifier si le personnage est toujours en contact avec le sol
-            bool groundedAfterSlide = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround);
-
-            // Si un obstacle est détecté au-dessus de la tête ou si le personnage n'est plus en contact avec le sol, passer en position "crouch"
-            if (obstacleAboveHead || !groundedAfterSlide)
-            {
-                StartCrouch();
-            }
-            else
-            {
-                EndCrouch(); // Si aucun obstacle n'est détecté au-dessus de la tête, arrêter le crouch
-            }
+            StartCrouch();
         }
+        else
+        {
+            idle.enabled = true;
+            crouch.enabled = false;
+        }      
     }
 
     private void StartCrouch()
     {
+
         if (isCrouching) return;
 
         isCrouching = true;
-        Debug.Log("je croush");
-        rb.velocity = Vector3.zero;
-        //transform.localScale = new Vector3(1f, 0.5f, 1f);
 
-        RaycastHit groundHit;
-        if (Physics.Raycast(transform.position, Vector3.down, out groundHit, Mathf.Infinity, whatIsGround))
-        {
-            transform.position = groundHit.point + Vector3.up * slideHeight;
-        }
+        rb.velocity = Vector3.zero;       
 
-        transform.localScale = new Vector3(1f, slideHeight, 1f);
+        idle.enabled = false;
+        crouch.enabled = true;
+
     }
 
     private void EndCrouch()
     {
+
         if (!isCrouching) return;
 
-        Vector3 standingPosition = transform.position + new Vector3(0f, playerHeight * 0.25f, 0f);
-        RaycastHit hit;
-        float standingHeight = playerHeight * 2f; // Hauteur de raycast pour vérifier les collisions au-dessus du personnage
-
-        // Effectuer un raycast vers le haut pour vérifier les collisions
-        if (Physics.Raycast(standingPosition, Vector3.up, out hit, standingHeight))
-        {
-            // Si une collision est détectée, empêcher le personnage de se relever
-            return;
-        }
-
-        // Si aucune collision n'est détectée, le personnage peut se relever
-        transform.position = standingPosition;
-
         isCrouching = false;
-        transform.localScale = new Vector3(1f, 1f, 1f);
+
+        idle.enabled = true;
+        crouch.enabled = false;
+
     }
 
-    private bool CheckHeadCollision()
+    private void OnDrawGizmosSelected()
     {
-        Vector3 headPosition = transform.position + new Vector3(0f, playerHeight * 0.5f, 0f);
-        float headCheckDistance = playerHeight; // Distance de vérification de collision au-dessus de la tête
-
-        RaycastHit hit;
-        if (Physics.Raycast(headPosition, Vector3.up, out hit, headCheckDistance))
-        {
-            // Une collision a été détectée au-dessus de la tête
-            return true;
-        }
-
-        // Aucune collision détectée au-dessus de la tête
-        return false;
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(headCheck.position, detectionRadius);
     }
-
-    private bool CheckObstacleAboveHead()
-    {
-        Vector3 headPosition = transform.position + new Vector3(0f, playerHeight * 0.5f, 0f);
-        float headCheckDistance = playerHeight * 0.5f; // Distance de vérification de collision au-dessus de la tête
-
-        RaycastHit hit;
-        if (Physics.SphereCast(headPosition, headCheckDistance, Vector3.up, out hit, 0f, whatIsGround))
-        {
-            // Une collision a été détectée au-dessus de la tête
-            return true;
-        }
-
-        // Aucune collision détectée au-dessus de la tête
-        return false;
-    }
-
-
 
     private void StateHandler()
     {
