@@ -67,6 +67,7 @@ public class PlayerMovement : MonoBehaviour
     bool isSliding;
     bool isCrouching;
     bool isWalking;
+    bool isRunning;
 
     Rigidbody rb;
 
@@ -158,15 +159,19 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKeyDown(slideKey) && Input.GetKey(sprintKey) && grounded && currentStamina >= 20f && !isCrouching)
         {
             StartSlide();
+            animator.SetBool("slide", true);
         }
 
         if (Input.GetKeyUp(slideKey) && !isObjectDetected)
         {
             EndSlide();
+            animator.SetBool("slide", false);
         }
         if (Input.GetKeyUp(slideKey) && isObjectDetected)
         {
             StartCrouch();
+            animator.SetBool("slide", false);
+            //animator.SetBool("crouchIdle", true);
         }
 
         //Crouch
@@ -200,11 +205,13 @@ public class PlayerMovement : MonoBehaviour
 
         //Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
 
-        if ((targetVelocity.x != 0 || targetVelocity.z != 0) && !isCrouching)
+        if ((targetVelocity.x != 0 || targetVelocity.z != 0) && !isCrouching && Input.GetKey(sprintKey) == false)
         {
             isWalking = true;
             animator.SetBool("walk", true);
             animator.SetBool("crouchWalk", false);
+            animator.SetBool("run", false);
+
             Debug.Log("Walking");
         }
         else
@@ -245,17 +252,31 @@ public class PlayerMovement : MonoBehaviour
     {
         if (restricted) return;
 
+        Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+
         //Calcul Direction Mouvement
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
         //Calcul de la vitesse du personnage lors de la Course
         float targetSpeed = moveSpeed;
 
-        if (Input.GetKey(sprintKey) && currentStamina > 0 && !isCrouching)
+        if (Input.GetKey(sprintKey) && currentStamina != 0 && !isCrouching)
         {
             targetSpeed *= sprintMultiplier;
             currentStamina -= Time.deltaTime * staminaDepletionRate;
             Debug.Log("Sprint");
+
+            if((targetVelocity.x != 0 || targetVelocity.z != 0) && currentStamina > 0)
+            {
+                animator.SetBool("run", true);
+            }
+            else
+            {
+                Debug.Log("NoMoreStamina");
+                animator.SetBool("walk", true);
+                animator.SetBool("run", false);               
+            }
+            
         }
 
         //Transition Vitesse Smooth
