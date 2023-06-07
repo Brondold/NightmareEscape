@@ -87,6 +87,9 @@ public class PlayerMovement : MonoBehaviour
     public TextMeshProUGUI staminaText; // Référence au composant TextMeshProUGUI pour afficher la stamina
     public GameObject mortText;
 
+    [Header("Sound")]
+    public AudioSource walkSound;
+    public AudioSource runSound;
 
     private void Start()
     {
@@ -95,7 +98,6 @@ public class PlayerMovement : MonoBehaviour
 
         readyToJump = true;
         currentStamina = maxStamina;
-
     }
 
     private void Update()
@@ -221,6 +223,7 @@ public class PlayerMovement : MonoBehaviour
 
         //Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
 
+        //Detect if player is moving
         if ((targetVelocity.x != 0 || targetVelocity.z != 0) && !isCrouching && Input.GetKey(sprintKey) == false)
         {
             isWalking = true;
@@ -229,19 +232,38 @@ public class PlayerMovement : MonoBehaviour
             animator.SetBool("run", false);
 
             Debug.Log("Walking");
+            
         }
         else
         {
             isWalking = false;
             animator.SetBool("walk", false);
+            walkSound.Play();
             //Debug.Log("NotWalking");
         }
-
-
 
         SpeedControl();
         Stamina();
 
+        if(!isWalking)
+        {
+            //walkSound.Play();
+        }
+        if(isWalking && !Input.GetKey(sprintKey))
+        {
+            //runSound.Play();
+        }
+
+        if (rb.velocity.magnitude <= 0.2)
+        {
+            //Play sound here if you have a rigidbody component and if your movement is rigidbody.AddForce
+            //walkSound.Play();
+        }
+        else if(rb.velocity.magnitude <= 0.2 && !Input.GetKey(sprintKey))
+        {
+            //Play sound here if you have a rigidbody component and if your movement is rigidbody.AddForce
+            //runSound.Play();
+        }
 
         // Mettre à jour le texte de la vitesse dans l'UI
         speedText.text = rb.velocity.magnitude.ToString("F2");
@@ -254,6 +276,7 @@ public class PlayerMovement : MonoBehaviour
         float moveHorizontal = Input.GetAxis("Horizontal");
         float moveVertical = Input.GetAxis("Vertical");
 
+        //Rotation Character
         Vector3 movement = new Vector3(moveHorizontal, 0f, moveVertical).normalized * moveSpeed;
 
         if (movement.magnitude > 0.1f)
@@ -289,8 +312,6 @@ public class PlayerMovement : MonoBehaviour
         // Calcul de la vitesse du personnage lors de la Course
         float targetSpeed = moveSpeed;
 
-
-
         if (Input.GetKey(sprintKey) && currentStamina != 0 && !isCrouching)
         {
             targetSpeed *= sprintMultiplier;
@@ -300,12 +321,16 @@ public class PlayerMovement : MonoBehaviour
             if ((targetVelocity.x != 0 || targetVelocity.z != 0) && currentStamina > 0)
             {
                 animator.SetBool("run", true);
+
+                //walkSound.Play();
             }
             else
             {
                 Debug.Log("NoMoreStamina");
                 animator.SetBool("walk", true);
                 animator.SetBool("run", false);
+
+                runSound.Play();
             }
         }
 
@@ -339,6 +364,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
+        //Rotation Character ?
         if (moveDirection != Vector3.zero)
         {
             Quaternion toRotation = Quaternion.LookRotation(moveDirection, Vector3.up);
