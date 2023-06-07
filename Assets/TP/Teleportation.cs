@@ -8,11 +8,12 @@ public class Teleportation : MonoBehaviour
     public float ScoreTP = 0;
 
     private CharacterController characterController;
+    public GameObject controller;
     private bool isTeleporting;
 
     private void Start()
     {
-        characterController = GetComponent<CharacterController>();
+        //characterController = GetComponent<CharacterController>();
     }
 
     private void OnTriggerEnter(Collider other)
@@ -31,9 +32,11 @@ public class Teleportation : MonoBehaviour
             if (isTeleporting)
             {
                 isTeleporting = false;
-                characterController.enabled = false;
-                characterController.transform.position = teleportTarget.position; // Téléporte le personnage à l'endroit TP1
-                characterController.enabled = true;
+                //characterController.enabled = false;
+                controller.SetActive(false);
+                controller.transform.position = teleportTarget.position; // Téléporte le personnage à l'endroit TP1
+                controller.SetActive(true);
+                //characterController.enabled = true;
             }
         }
 
@@ -42,9 +45,9 @@ public class Teleportation : MonoBehaviour
             if (isTeleporting)
             {
                 isTeleporting = false;
-                characterController.enabled = false;
-                characterController.transform.position = teleportTarget1.position; // Téléporte le personnage à l'endroit TP2
-                characterController.enabled = true;
+                controller.SetActive(false);
+                controller.transform.position = teleportTarget1.position; // Téléporte le personnage à l'endroit TP2
+                controller.SetActive(true);
             }
         }
 
@@ -53,9 +56,9 @@ public class Teleportation : MonoBehaviour
             if (isTeleporting)
             {
                 isTeleporting = false;
-                characterController.enabled = false;
-                characterController.transform.position = teleportTarget2.position; // Téléporte le personnage à l'endroit TP2
-                characterController.enabled = true;
+                controller.SetActive(false);
+                controller.transform.position = teleportTarget2.position; // Téléporte le personnage à l'endroit TP2
+                controller.SetActive(true);
             }
         }
     }
