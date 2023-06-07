@@ -26,6 +26,8 @@ public class PlayerMovement : MonoBehaviour
     public float sprintMultiplier;
     public float slideDistance;
     public float slideHeight;
+    public float rotationSpeed;
+    public float rotationDamping;
 
     public float groundDrag;
 
@@ -199,8 +201,23 @@ public class PlayerMovement : MonoBehaviour
         {
             EndCrouch();
             Debug.Log("StopCrouch");
-            animator.SetBool("crouchIdle", false);
+
+            if (!isObjectDetected && !isCrouching)
+            {
+                animator.SetBool("crouchIdle", false);
+                animator.SetBool("crouchWalk", false);
+            }
+            else
+            {
+                animator.SetBool("crouchIdle", false);
+            }
             
+            
+        }
+
+        if(!isObjectDetected && !isCrouching)
+        {
+            animator.SetBool("crouchIdle", false);
         }
 
         //Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
@@ -235,6 +252,19 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        float moveHorizontal = Input.GetAxis("Horizontal");
+        float moveVertical = Input.GetAxis("Vertical");
+
+        Vector3 movement = new Vector3(moveHorizontal, 0f, moveVertical).normalized * moveSpeed;
+
+        if (movement.magnitude > 0.1f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(movement);
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, 2f);
+        }
+
+        rb.velocity = new Vector3(movement.x, rb.velocity.y, movement.z);
+
         MovePlayer();
 
         if(Input.GetKey(KeyCode.C) == false && !isObjectDetected)
@@ -248,17 +278,19 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void MovePlayer()
+    void MovePlayer()
     {
         if (restricted) return;
 
         Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
 
-        //Calcul Direction Mouvement
+        // Calcul Direction Mouvement
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
-        //Calcul de la vitesse du personnage lors de la Course
+        // Calcul de la vitesse du personnage lors de la Course
         float targetSpeed = moveSpeed;
+
+        
 
         if (Input.GetKey(sprintKey) && currentStamina != 0 && !isCrouching)
         {
@@ -266,7 +298,7 @@ public class PlayerMovement : MonoBehaviour
             currentStamina -= Time.deltaTime * staminaDepletionRate;
             Debug.Log("Sprint");
 
-            if((targetVelocity.x != 0 || targetVelocity.z != 0) && currentStamina > 0)
+            if ((targetVelocity.x != 0 || targetVelocity.z != 0) && currentStamina > 0)
             {
                 animator.SetBool("run", true);
             }
@@ -274,15 +306,14 @@ public class PlayerMovement : MonoBehaviour
             {
                 Debug.Log("NoMoreStamina");
                 animator.SetBool("walk", true);
-                animator.SetBool("run", false);               
+                animator.SetBool("run", false);
             }
-            
         }
 
-        //Transition Vitesse Smooth
+        // Transition Vitesse Smooth
         float currentSpeed = Mathf.Lerp(rb.velocity.magnitude, targetSpeed, Time.deltaTime * 15f);
 
-        //Verification Stamina
+        // Verification Stamina
         if (currentStamina <= 0)
         {
             currentSpeed = moveSpeed;
@@ -298,7 +329,7 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            //Applique Force Mouvement
+            // Applique Force Mouvement
             if (grounded)
             {
                 rb.AddForce(moveDirection.normalized * currentSpeed * 10f, ForceMode.Force);
@@ -307,6 +338,12 @@ public class PlayerMovement : MonoBehaviour
             {
                 rb.AddForce(moveDirection.normalized * currentSpeed * 10f * airMultiplier, ForceMode.Force);
             }
+        }
+
+        if (moveDirection != Vector3.zero)
+        {
+            Quaternion toRotation = Quaternion.LookRotation(moveDirection, Vector3.up);
+            transform.rotation = Quaternion.Lerp(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
         }
 
         // Mettre à jour le texte de la vitesse dans l'UI
@@ -367,7 +404,6 @@ public class PlayerMovement : MonoBehaviour
         idle.enabled = false;
         crouch.enabled = true;
 
-        //transform.localScale = new Vector3(1f, slideHeight, 1f);
         slideDirection = moveDirection.normalized;
     }
 
