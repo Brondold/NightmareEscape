@@ -40,7 +40,7 @@ public class LedgeGrab : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 // Logic pour monter le personnage sur le rebord
-                Vector3 m_input = new Vector3(Input.GetAxis("Horizontal"), 20, Input.GetAxis("Vertical"));
+                Vector3 m_input = new Vector3(Input.GetAxis("Horizontal"), 30, Input.GetAxis("Vertical"));
                 rb.MovePosition(transform.position + m_input * Time.deltaTime * m_speed);
             }
 

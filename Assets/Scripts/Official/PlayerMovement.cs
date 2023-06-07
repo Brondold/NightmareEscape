@@ -26,6 +26,8 @@ public class PlayerMovement : MonoBehaviour
     public float sprintMultiplier;
     public float slideDistance;
     public float slideHeight;
+    public float rotationSpeed;
+    public float rotationDamping;
 
     public float groundDrag;
 
@@ -66,6 +68,8 @@ public class PlayerMovement : MonoBehaviour
     Vector3 slideStartPosition;
     bool isSliding;
     bool isCrouching;
+    bool isWalking;
+    bool isRunning;
 
     Rigidbody rb;
 
@@ -83,6 +87,10 @@ public class PlayerMovement : MonoBehaviour
     public TextMeshProUGUI staminaText; // Référence au composant TextMeshProUGUI pour afficher la stamina
     public GameObject mortText;
 
+    [Header("Sound")]
+    public AudioSource walkSound;
+    public AudioSource runSound;
+    public GameObject runSoundTest;
 
     private void Start()
     {
@@ -91,7 +99,6 @@ public class PlayerMovement : MonoBehaviour
 
         readyToJump = true;
         currentStamina = maxStamina;
-
     }
 
     private void Update()
@@ -102,7 +109,7 @@ public class PlayerMovement : MonoBehaviour
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround);
 
         //Fall Damage & detection for death from Fall Damage
-        if(!previousGrounded && grounded)
+        if (!previousGrounded && grounded)
         {
             Debug.Log("Fall Damage" + (rb.velocity.y < -fallTresholdVelocity));
 
@@ -110,7 +117,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 float damage = Mathf.Abs(rb.velocity.y + fallTresholdVelocity);
                 Debug.Log("Damage Dealt :" + damage);
-                if(damage >=4)
+                if (damage >= 4)
                 {
                     mortText.SetActive(true);
                 }
@@ -135,55 +142,123 @@ public class PlayerMovement : MonoBehaviour
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
+        Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+
+        if (grounded)
+        {
+            animator.SetBool("jump", false);
+        }
+
         //Jump
-        if (Input.GetKeyDown(jumpKey) && readyToJump && grounded && !isCrouching)
+        if (Input.GetKeyDown(jumpKey) || Input.GetButton("AXbox") && readyToJump && grounded && !isCrouching)
         {
             readyToJump = false;
             Jump();
+
+            animator.SetBool("jump", true);
 
             Invoke(nameof(ResetJump), jumpCooldown);
         }
 
         //Slide
-        if (Input.GetKeyDown(slideKey) && Input.GetKey(sprintKey) && grounded && currentStamina >= 20f && !isCrouching)
+        if (Input.GetKeyDown(slideKey) || Input.GetButtonDown("YXbox") && Input.GetKey(sprintKey) && grounded && currentStamina >= 20f && !isCrouching)
         {
             StartSlide();
+            animator.SetBool("slide", true);
         }
 
-        if (Input.GetKeyUp(slideKey) && !isObjectDetected)
+        if (Input.GetKeyUp(slideKey) ||Input.GetButtonUp("YXbox") && !isObjectDetected)
         {
             EndSlide();
+            animator.SetBool("slide", false);
         }
-        if (Input.GetKeyUp(slideKey) && isObjectDetected)
+        if (Input.GetKeyUp(slideKey) || Input.GetButtonUp("YXbox") && isObjectDetected)
         {
             StartCrouch();
+            animator.SetBool("slide", false);
+            //animator.SetBool("crouchIdle", true);
         }
 
-
         //Crouch
-        if (Input.GetKeyDown(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
+        if (Input.GetKey(KeyCode.C) || Input.GetButton("XXbox") && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
         {
             StartCrouch();
             Debug.Log("Crouch");
+            readyToJump = false;
 
-            animator.SetBool("crouchIdle", true);
+            if ((targetVelocity.x != 0 || targetVelocity.z != 0) && isCrouching)
+            {
+                animator.SetBool("crouchIdle", false);
+                animator.SetBool("crouchWalk", true);
+
+                Debug.Log("CrouchWalking");
+            }
+            else
+            {
+                animator.SetBool("crouchIdle", true);
+                animator.SetBool("crouchWalk", false);
+            }
+
+
         }
-        if (Input.GetKeyUp(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
+        if (Input.GetKeyUp(KeyCode.C) || Input.GetButtonUp("XXbox") && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
         {
             EndCrouch();
             Debug.Log("StopCrouch");
+            readyToJump = true;
+
+            if (!isObjectDetected && !isCrouching)
+            {
+                animator.SetBool("crouchIdle", false);
+                animator.SetBool("crouchWalk", false);
+            }
+            else
+            {
+                animator.SetBool("crouchIdle", false);
+            }
+
+        }
+
+        if (!isObjectDetected && !isCrouching)
+        {
             animator.SetBool("crouchIdle", false);
         }
 
-        //MyInput();
+        //Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+
+        //Detect if player is moving
+        if ((targetVelocity.x != 0 || targetVelocity.z != 0) && !isCrouching && Input.GetKey(sprintKey) == false)
+        {
+            isWalking = true;
+            animator.SetBool("walk", true);
+            animator.SetBool("crouchWalk", false);
+            animator.SetBool("run", false);
+
+            runSoundTest.SetActive(false);
+
+            Debug.Log("Walking");
+
+            if(isWalking)
+            {
+                //runSound.Play();
+            }
+            if(!isWalking )
+            {
+                //runSound.Stop();
+            }
+
+        }
+        else
+        {
+            isWalking = false;
+            animator.SetBool("walk", false);
+
+            walkSound.Play();
+            //Debug.Log("NotWalking");
+        }
+
         SpeedControl();
         Stamina();
-
-        // handle drag
-        //if (grounded)
-          //.  rb.drag = groundDrag;
-        //.else
-        //    rb.drag = 0;
 
         // Mettre à jour le texte de la vitesse dans l'UI
         speedText.text = rb.velocity.magnitude.ToString("F2");
@@ -193,9 +268,23 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        float moveHorizontal = Input.GetAxis("Horizontal");
+        float moveVertical = Input.GetAxis("Vertical");
+
+        //Rotation Character
+        Vector3 movement = new Vector3(moveHorizontal, 0f, moveVertical).normalized * moveSpeed;
+
+        if (movement.magnitude > 0.1f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(movement);
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, .2f);
+        }
+
+        rb.velocity = new Vector3(movement.x, rb.velocity.y, movement.z);
+
         MovePlayer();
 
-        if(Input.GetKey(crouchKey) == false && !isObjectDetected)
+        if (Input.GetKey(KeyCode.C) == false || Input.GetButton("XXbox") == false && !isObjectDetected)
         {
             EndCrouch();
         }
@@ -206,73 +295,45 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void MyInput()
-    {
-
-        horizontalInput = Input.GetAxisRaw("Horizontal");
-        verticalInput = Input.GetAxisRaw("Vertical");
-
-        //Jump
-        if (Input.GetKeyDown(jumpKey) && readyToJump && grounded && !isCrouching)
-        {
-            readyToJump = false;
-            Jump();
-
-            Invoke(nameof(ResetJump), jumpCooldown);
-        }
-
-        //Slide
-        if (Input.GetKeyDown(slideKey) && Input.GetKey(sprintKey) && grounded && currentStamina >= 20f && !isCrouching)
-        {
-            StartSlide();
-        }
-
-        if (Input.GetKeyUp(slideKey) && !isObjectDetected)
-        {
-            EndSlide();
-        }
-        if(Input.GetKeyUp(slideKey) && isObjectDetected)
-        {
-            StartCrouch();
-        }
-
-        //Crouch
-        if (Input.GetKeyDown(crouchKey) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
-        {
-            StartCrouch();
-            Debug.Log("Crouch");
-
-            animator.SetBool("crouchIdle", true);
-        }
-        if(Input.GetKeyUp(crouchKey) && grounded &&!isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
-        {
-            EndCrouch();
-            Debug.Log("StopCrouch");
-            animator.SetBool("crouchIdle", false);
-        }
-    }
-
-    private void MovePlayer()
+    void MovePlayer()
     {
         if (restricted) return;
 
-        //Calcul Direction Mouvement
+        Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+
+        // Calcul Direction Mouvement
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
-        //Calcul de la vitesse du personnage lors de la Course
+        // Calcul de la vitesse du personnage lors de la Course
         float targetSpeed = moveSpeed;
 
-        if (Input.GetKey(sprintKey) && currentStamina > 0 && !isCrouching)
+        if (Input.GetButton("YXbox") || Input.GetKey(sprintKey) && currentStamina != 0 && !isCrouching)
         {
             targetSpeed *= sprintMultiplier;
             currentStamina -= Time.deltaTime * staminaDepletionRate;
             Debug.Log("Sprint");
+
+            if ((targetVelocity.x != 0 || targetVelocity.z != 0) && currentStamina > 0)
+            {
+                animator.SetBool("run", true);
+
+                runSoundTest.SetActive(true);
+                //walkSound.Play();               
+            }
+            else
+            {
+                Debug.Log("NoMoreStamina");
+                animator.SetBool("walk", true);
+                animator.SetBool("run", false);
+
+                
+            }
         }
 
-        //Transition Vitesse Smooth
+        // Transition Vitesse Smooth
         float currentSpeed = Mathf.Lerp(rb.velocity.magnitude, targetSpeed, Time.deltaTime * 15f);
 
-        //Verification Stamina
+        // Verification Stamina
         if (currentStamina <= 0)
         {
             currentSpeed = moveSpeed;
@@ -288,7 +349,7 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            //Applique Force Mouvement
+            // Applique Force Mouvement
             if (grounded)
             {
                 rb.AddForce(moveDirection.normalized * currentSpeed * 10f, ForceMode.Force);
@@ -297,6 +358,13 @@ public class PlayerMovement : MonoBehaviour
             {
                 rb.AddForce(moveDirection.normalized * currentSpeed * 10f * airMultiplier, ForceMode.Force);
             }
+        }
+
+        //Rotation Character ?
+        if (moveDirection != Vector3.zero)
+        {
+            Quaternion toRotation = Quaternion.LookRotation(moveDirection, Vector3.up);
+            transform.rotation = Quaternion.Lerp(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
         }
 
         // Mettre à jour le texte de la vitesse dans l'UI
@@ -318,7 +386,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Stamina()
     {
-        if (Input.GetKey(sprintKey) && currentStamina > 0)
+        if (Input.GetKey(sprintKey) || Input.GetButton("BXbox") && currentStamina > 0)
         {
             currentStamina -= Time.deltaTime * staminaDepletionRate;
         }
@@ -357,7 +425,6 @@ public class PlayerMovement : MonoBehaviour
         idle.enabled = false;
         crouch.enabled = true;
 
-        //transform.localScale = new Vector3(1f, slideHeight, 1f);
         slideDirection = moveDirection.normalized;
     }
 
@@ -405,7 +472,7 @@ public class PlayerMovement : MonoBehaviour
         {
             idle.enabled = true;
             crouch.enabled = false;
-        }      
+        }
     }
 
     private void StartCrouch()
@@ -415,7 +482,7 @@ public class PlayerMovement : MonoBehaviour
 
         isCrouching = true;
 
-        rb.velocity = Vector3.zero;       
+        //rb.velocity = Vector3.zero;       
 
         idle.enabled = false;
         crouch.enabled = true;
