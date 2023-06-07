@@ -90,6 +90,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Sound")]
     public AudioSource walkSound;
     public AudioSource runSound;
+    public GameObject runSoundTest;
 
     private void Start()
     {
@@ -233,14 +234,17 @@ public class PlayerMovement : MonoBehaviour
             animator.SetBool("crouchWalk", false);
             animator.SetBool("run", false);
 
+            runSoundTest.SetActive(false);
+
             Debug.Log("Walking");
+
             if(isWalking)
             {
-                runSound.Play();
+                //runSound.Play();
             }
-            else
+            if(!isWalking )
             {
-                runSound.Stop();
+                //runSound.Stop();
             }
 
         }
@@ -255,26 +259,6 @@ public class PlayerMovement : MonoBehaviour
 
         SpeedControl();
         Stamina();
-
-        if(!isWalking)
-        {
-            //walkSound.Play();
-        }
-        if(isWalking && !Input.GetKey(sprintKey))
-        {
-            //runSound.Play();
-        }
-
-        if (rb.velocity.magnitude <= 0.2)
-        {
-            //Play sound here if you have a rigidbody component and if your movement is rigidbody.AddForce
-            //walkSound.Play();
-        }
-        else if(rb.velocity.magnitude <= 0.2 && !Input.GetKey(sprintKey))
-        {
-            //Play sound here if you have a rigidbody component and if your movement is rigidbody.AddForce
-            //runSound.Play();
-        }
 
         // Mettre à jour le texte de la vitesse dans l'UI
         speedText.text = rb.velocity.magnitude.ToString("F2");
@@ -333,13 +317,16 @@ public class PlayerMovement : MonoBehaviour
             {
                 animator.SetBool("run", true);
 
+                runSoundTest.SetActive(true);
                 //walkSound.Play();               
             }
             else
             {
                 Debug.Log("NoMoreStamina");
                 animator.SetBool("walk", true);
-                animator.SetBool("run", false);                
+                animator.SetBool("run", false);
+
+                
             }
         }
 
