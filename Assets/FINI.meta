@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< Updated upstream:Assets/FINI.meta
 guid: 4096b67d6a0d1e243b6a1c922ad2cc62
+========
+guid: 4e7d4740a676e69489c8a81ff1a04d1b
+>>>>>>>> Stashed changes:Assets/Prefabs.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
