@@ -106,7 +106,7 @@ public class PlayerMovement : MonoBehaviour
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround);
 
         //Fall Damage & detection for death from Fall Damage
-        if(!previousGrounded && grounded)
+        if (!previousGrounded && grounded)
         {
             Debug.Log("Fall Damage" + (rb.velocity.y < -fallTresholdVelocity));
 
@@ -114,7 +114,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 float damage = Mathf.Abs(rb.velocity.y + fallTresholdVelocity);
                 Debug.Log("Damage Dealt :" + damage);
-                if(damage >=4)
+                if (damage >= 4)
                 {
                     mortText.SetActive(true);
                 }
@@ -195,7 +195,7 @@ public class PlayerMovement : MonoBehaviour
                 animator.SetBool("crouchWalk", false);
             }
 
-           
+
         }
         if (Input.GetKeyUp(KeyCode.C) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
         {
@@ -211,11 +211,10 @@ public class PlayerMovement : MonoBehaviour
             {
                 animator.SetBool("crouchIdle", false);
             }
-            
-            
+
         }
 
-        if(!isObjectDetected && !isCrouching)
+        if (!isObjectDetected && !isCrouching)
         {
             animator.SetBool("crouchIdle", false);
         }
@@ -238,8 +237,8 @@ public class PlayerMovement : MonoBehaviour
             //Debug.Log("NotWalking");
         }
 
-        
-        
+
+
         SpeedControl();
         Stamina();
 
@@ -260,14 +259,14 @@ public class PlayerMovement : MonoBehaviour
         if (movement.magnitude > 0.1f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(movement);
-            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, 2f);
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, .2f);
         }
 
         rb.velocity = new Vector3(movement.x, rb.velocity.y, movement.z);
 
         MovePlayer();
 
-        if(Input.GetKey(KeyCode.C) == false && !isObjectDetected)
+        if (Input.GetKey(KeyCode.C) == false && !isObjectDetected)
         {
             EndCrouch();
         }
@@ -290,7 +289,7 @@ public class PlayerMovement : MonoBehaviour
         // Calcul de la vitesse du personnage lors de la Course
         float targetSpeed = moveSpeed;
 
-        
+
 
         if (Input.GetKey(sprintKey) && currentStamina != 0 && !isCrouching)
         {
@@ -451,7 +450,7 @@ public class PlayerMovement : MonoBehaviour
         {
             idle.enabled = true;
             crouch.enabled = false;
-        }      
+        }
     }
 
     private void StartCrouch()
