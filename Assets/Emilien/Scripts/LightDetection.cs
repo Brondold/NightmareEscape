@@ -5,6 +5,7 @@ public class LightDetection : MonoBehaviour
     public float[] angles = { 45f, 90f, 135f }; // Angles des raycasts en degrés
     public float raycastDistance = 5f; // Distance du raycast
     public GameObject canvas;
+    public GameObject player;
 
     void Update()
     {
@@ -27,6 +28,7 @@ public class LightDetection : MonoBehaviour
                 {
                     // Affiche un message dans la console de débogage
                     canvas.SetActive(true);
+                    player.SetActive(false);
                 }
             }
         }
