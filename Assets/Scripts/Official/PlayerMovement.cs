@@ -150,7 +150,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         //Jump
-        if (Input.GetKeyDown(jumpKey) && readyToJump && grounded && !isCrouching)
+        if (Input.GetKeyDown(jumpKey) || Input.GetButton("AXbox") && readyToJump && grounded && !isCrouching)
         {
             readyToJump = false;
             Jump();
@@ -161,7 +161,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         //Slide
-        if (Input.GetKeyDown(slideKey) && Input.GetKey(sprintKey) && grounded && currentStamina >= 20f && !isCrouching)
+        if (Input.GetKeyDown(slideKey) || Input.GetButtonDown("YXbox") && Input.GetKey(sprintKey) && grounded && currentStamina >= 20f && !isCrouching)
         {
             StartSlide();
             animator.SetBool("slide", true);
@@ -180,7 +180,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         //Crouch
-        if (Input.GetKey(KeyCode.C) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
+        if (Input.GetKey(KeyCode.C) || Input.GetButton("XXbox") && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey))
         {
             StartCrouch();
             Debug.Log("Crouch");
@@ -201,7 +201,7 @@ public class PlayerMovement : MonoBehaviour
 
 
         }
-        if (Input.GetKeyUp(KeyCode.C) && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
+        if (Input.GetKeyUp(KeyCode.C) || Input.GetButtonUp("XXbox") && grounded && !isSliding && !Input.GetKey(jumpKey) && !Input.GetKey(sprintKey) && !isObjectDetected)
         {
             EndCrouch();
             Debug.Log("StopCrouch");
@@ -284,7 +284,7 @@ public class PlayerMovement : MonoBehaviour
 
         MovePlayer();
 
-        if (Input.GetKey(KeyCode.C) == false && !isObjectDetected)
+        if (Input.GetKey(KeyCode.C) == false || Input.GetButton("XXbox") == false && !isObjectDetected)
         {
             EndCrouch();
         }
